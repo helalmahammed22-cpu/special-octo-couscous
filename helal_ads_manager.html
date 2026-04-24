@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>مدير إعلانات هلال</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0b0d12;
+  --bg2: #12151c;
+  --bg3: #1a1e28;
+  --bg4: #222736;
+  --border: rgba(255,255,255,0.07);
+  --border2: rgba(255,255,255,0.13);
+  --text: #e8e4d9;
+  --text2: #8a8fa0;
+  --text3: #555a6a;
+  --accent: #3b82f6;
+  --accent2: #1d4ed8;
+  --red: #ef4444;
+  --red-bg: #2d1212;
+  --red-border: #7f1d1d;
+  --orange: #f97316;
+  --orange-bg: #2d1a08;
+  --orange-border: #7c2d12;
+  --green: #22c55e;
+  --green-bg: #0d2818;
+  --green-border: #14532d;
+  --yellow: #eab308;
+  --radius: 8px;
+  --radius-lg: 12px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Cairo', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; font-size: 14px; }
+
+/* TOPBAR */
+.topbar {
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border);
+  padding: 0 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 52px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.logo { font-size: 16px; font-weight: 700; display: flex; align-items: center; gap: 8px; color: var(--text); }
+.live-dot { width: 8px; height: 8px; background: var(--green); border-radius: 50%; animation: pulse 2s infinite; }
+@keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(.8)} }
+.top-actions { display: flex; gap: 8px; align-items: center; }
+.btn { display: inline-flex; align-items: center; gap: 5px; padding: 6px 14px; border-radius: var(--radius); border: 1px solid var(--border2); background: var(--bg3); color: var(--text); font-family: 'Cairo', sans-serif; font-size: 13px; cursor: pointer; transition: all .15s; white-space: nowrap; }
+.btn:hover { background: var(--bg4); border-color: rgba(255,255,255,.2); }
+.btn-primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+.btn-primary:hover { background: var(--accent2); }
+.btn-sm { padding: 4px 10px; font-size: 12px; }
+
+/* STATS */
+.stats-bar {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1px;
+  background: var(--border);
+  border-bottom: 1px solid var(--border);
+}
+.stat-item {
+  background: var(--bg2);
+  padding: 12px 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.stat-icon { width: 36px; height: 36px; border-radius: var(--radius); display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
+.stat-icon.red { background: var(--red-bg); color: var(--red); }
+.stat-icon.orange { background: var(--orange-bg); color: var(--orange); }
+.stat-icon.green { background: var(--green-bg); color: var(--green); }
+.stat-icon.blue { background: #0f1d3a; color: var(--accent); }
+.stat-num { font-size: 22px; font-weight: 700; line-height: 1; }
+.stat-lbl { font-size: 11px; color: var(--text2); margin-top: 2px; }
+.stat-num.red { color: var(--red); }
+.stat-num.orange { color: var(--orange); }
+.stat-num.green { color: var(--green); }
+.stat-num.blue { color: var(--accent); }
+
+/* LAYOUT */
+.layout { display: flex; height: calc(100vh - 52px - 61px - 40px); }
+.sidebar { width: 220px; background: var(--bg2); border-left: 1px solid var(--border); overflow-y: auto; flex-shrink: 0; }
+.sidebar-section { padding: 14px 14px 6px; font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: .1em; }
+.sidebar-item { padding: 8px 14px; font-size: 13px; color: var(--text2); cursor: pointer; display: flex; align-items: center; gap: 8px; border-right: 2px solid transparent; transition: all .1s; }
+.sidebar-item:hover { background: var(--bg3); color: var(--text); }
+.sidebar-item.active { background: var(--bg3); color: var(--text); border-right-color: var(--accent); }
+.sidebar-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+.sidebar-count { margin-right: auto; background: var(--bg4); color: var(--text2); font-size: 10px; padding: 1px 6px; border-radius: 10px; }
+
+/* CONTENT */
+.content { flex: 1; overflow: hidden; display: flex; flex-direction: column; }
+.content-toolbar {
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  background: var(--bg2);
+}
+.search-wrap { position: relative; flex: 1; min-width: 160px; max-width: 280px; }
+.search-wrap input { width: 100%; background: var(--bg3); border: 1px solid var(--border); color: var(--text); border-radius: var(--radius); padding: 6px 32px 6px 10px; font-family: 'Cairo', sans-serif; font-size: 13px; }
+.search-wrap input:focus { outline: none; border-color: var(--accent); }
+.search-icon { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--text3); font-size: 13px; pointer-events: none; }
+.filter-select { background: var(--bg3); border: 1px solid var(--border); color: var(--text); border-radius: var(--radius); padding: 6px 10px; font-family: 'Cairo', sans-serif; font-size: 12px; cursor: pointer; }
+.filter-select:focus { outline: none; }
+.sort-btn { font-size: 11px; }
+
+/* TABLE */
+.table-wrap { overflow: auto; flex: 1; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+thead tr { background: var(--bg2); position: sticky; top: 0; z-index: 5; }
+th { padding: 9px 12px; text-align: right; color: var(--text3); font-weight: 600; font-size: 11px; border-bottom: 1px solid var(--border); white-space: nowrap; text-transform: uppercase; letter-spacing: .04em; cursor: pointer; user-select: none; }
+th:hover { color: var(--text2); }
+th .sort-arrow { margin-right: 4px; opacity: .4; }
+th.sorted .sort-arrow { opacity: 1; color: var(--accent); }
+td { padding: 8px 12px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+
+tr.r-red { background: var(--red-bg); }
+tr.r-red td:first-child { border-right: 3px solid var(--red); }
+tr.r-orange { background: var(--orange-bg); }
+tr.r-orange td:first-child { border-right: 3px solid var(--orange); }
+tr.r-green { background: var(--green-bg); }
+tr.r-green td:first-child { border-right: 3px solid var(--green); }
+tr:hover td { filter: brightness(1.12); }
+tr.r-red:hover td { background: #3d1818; }
+tr.r-orange:hover td { background: #3d2210; }
+tr.r-green:hover td { background: #102e1c; }
+
+.client-name { font-weight: 600; font-size: 13px; color: var(--text); }
+.client-source { font-size: 10px; color: var(--text3); margin-top: 1px; }
+.ch-badge { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; }
+.ch-wa { background: #0a2e1a; color: #4ade80; border: 1px solid #166534; }
+.ch-fb { background: #0a1a3a; color: #60a5fa; border: 1px solid #1e3a8a; }
+.countdown { font-weight: 700; font-size: 12px; font-variant-numeric: tabular-nums; }
+.cd-red { color: var(--red); }
+.cd-orange { color: var(--orange); }
+.cd-green { color: var(--green); }
+.cd-gray { color: var(--text3); }
+.prio-wrap { display: flex; gap: 2px; }
+.prio-star { width: 10px; height: 10px; border-radius: 50%; }
+.prio-star.on { background: var(--yellow); }
+.prio-star.off { background: var(--bg4); }
+.msg-preview { font-size: 11px; color: var(--text2); max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.actions-cell { display: flex; gap: 4px; flex-wrap: wrap; }
+.action-btn { padding: 3px 9px; border-radius: 6px; font-size: 11px; font-family: 'Cairo',sans-serif; cursor: pointer; border: 1px solid; transition: all .1s; font-weight: 600; white-space: nowrap; }
+.action-btn:hover { filter: brightness(1.15); }
+.btn-wa { background: #0a2e1a; color: #4ade80; border-color: #166534; }
+.btn-done { background: #0a2e1a; color: #86efac; border-color: #14532d; }
+.btn-edit { background: #0a1a3a; color: #93c5fd; border-color: #1e3a8a; }
+.btn-del { background: #2d1212; color: #fca5a5; border-color: #7f1d1d; }
+.btn-undone { background: var(--bg4); color: var(--text2); border-color: var(--border2); }
+
+/* TASKS PANEL */
+.tasks-panel { width: 210px; background: var(--bg2); border-right: 1px solid var(--border); overflow-y: auto; flex-shrink: 0; padding: 12px; }
+.tasks-header { font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: .1em; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; }
+.task-card { background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius); padding: 9px 10px; margin-bottom: 6px; cursor: pointer; transition: border-color .1s; }
+.task-card:hover { border-color: var(--border2); }
+.task-card.t-red { border-right: 3px solid var(--red); }
+.task-card.t-orange { border-right: 3px solid var(--orange); }
+.task-card.t-green { border-right: 3px solid var(--green); }
+.task-client { font-size: 12px; font-weight: 600; color: var(--text); margin-bottom: 2px; }
+.task-msg { font-size: 10px; color: var(--text2); margin-bottom: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.task-time { font-size: 10px; font-weight: 600; }
+.t-red .task-time { color: var(--red); }
+.t-orange .task-time { color: var(--orange); }
+.t-green .task-time { color: var(--green); }
+
+/* NOTIF BAR */
+.notif-bar {
+  background: var(--bg2);
+  border-top: 1px solid var(--border);
+  padding: 8px 20px;
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  flex-wrap: wrap;
+  height: 40px;
+  overflow: hidden;
+}
+.notif-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text2); }
+
+/* MODAL */
+.overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.7); z-index: 200; align-items: center; justify-content: center; }
+.overlay.open { display: flex; }
+.modal { background: var(--bg2); border: 1px solid var(--border2); border-radius: var(--radius-lg); padding: 20px; width: 380px; max-width: 95vw; max-height: 90vh; overflow-y: auto; }
+.modal-title { font-size: 16px; font-weight: 700; margin-bottom: 16px; color: var(--text); }
+.form-row { margin-bottom: 12px; }
+.form-row label { display: block; font-size: 12px; color: var(--text2); margin-bottom: 4px; font-weight: 600; }
+.form-row input, .form-row select, .form-row textarea {
+  width: 100%; background: var(--bg3); border: 1px solid var(--border2); color: var(--text);
+  border-radius: var(--radius); padding: 8px 10px; font-family: 'Cairo', sans-serif; font-size: 13px;
+  direction: rtl; transition: border-color .1s;
+}
+.form-row input:focus, .form-row select:focus, .form-row textarea:focus { outline: none; border-color: var(--accent); }
+.form-row textarea { resize: vertical; min-height: 70px; }
+.form-row select option { background: var(--bg3); }
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.modal-footer { display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--border); }
+
+/* SETTINGS PANEL */
+.settings-panel { background: var(--bg2); border: 1px solid var(--border2); border-radius: var(--radius-lg); padding: 16px; width: 340px; max-height: 90vh; overflow-y: auto; }
+.settings-section { margin-bottom: 18px; }
+.settings-section-title { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: .08em; margin-bottom: 10px; font-weight: 700; }
+.setting-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border); }
+.setting-row:last-child { border-bottom: none; }
+.setting-label { font-size: 13px; color: var(--text); }
+.setting-desc { font-size: 11px; color: var(--text3); margin-top: 2px; }
+.toggle { position: relative; width: 38px; height: 22px; flex-shrink: 0; }
+.toggle input { opacity: 0; width: 0; height: 0; }
+.toggle-slider { position: absolute; inset: 0; background: var(--bg4); border-radius: 11px; cursor: pointer; transition: .2s; }
+.toggle-slider::before { content: ''; position: absolute; width: 16px; height: 16px; right: 3px; top: 3px; background: var(--text3); border-radius: 50%; transition: .2s; }
+.toggle input:checked + .toggle-slider { background: var(--accent); }
+.toggle input:checked + .toggle-slider::before { right: 19px; background: white; }
+.number-input { width: 60px; background: var(--bg3); border: 1px solid var(--border2); color: var(--text); border-radius: var(--radius); padding: 4px 8px; font-family: 'Cairo',sans-serif; font-size: 13px; text-align: center; }
+.number-input:focus { outline: none; border-color: var(--accent); }
+.color-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; margin-top: 8px; }
+.color-opt { width: 32px; height: 32px; border-radius: 6px; cursor: pointer; border: 2px solid transparent; transition: border-color .1s; }
+.color-opt.selected { border-color: white; }
+
+/* EMPTY STATE */
+.empty-state { text-align: center; padding: 60px 20px; color: var(--text3); }
+.empty-state .empty-icon { font-size: 40px; margin-bottom: 12px; }
+.empty-state p { font-size: 14px; margin-bottom: 16px; }
+
+/* SCROLLBAR */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--bg4); border-radius: 10px; }
+::-webkit-scrollbar-thumb:hover { background: var(--border2); }
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+  .tasks-panel { display: none; }
+  .sidebar { width: 160px; }
+  .stats-bar { grid-template-columns: repeat(2,1fr); }
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="logo"><div class="live-dot"></div> مدير إعلانات هلال</div>
+  <div class="top-actions">
+    <button class="btn btn-sm" onclick="exportData()">⬇ تصدير</button>
+    <button class="btn btn-sm" onclick="importData()">⬆ استيراد</button>
+    <button class="btn btn-sm" onclick="openSettings()">⚙ الإعدادات</button>
+    <button class="btn btn-primary" onclick="openAdd()">+ عميل جديد</button>
+  </div>
+</div>
+
+<div class="stats-bar" id="stats-bar">
+  <div class="stat-item"><div class="stat-icon red">🔴</div><div><div class="stat-num red" id="cnt-red">0</div><div class="stat-lbl">عاجل اليوم</div></div></div>
+  <div class="stat-item"><div class="stat-icon orange">🟠</div><div><div class="stat-num orange" id="cnt-orange">0</div><div class="stat-lbl">بدون رد</div></div></div>
+  <div class="stat-item"><div class="stat-icon green">🟢</div><div><div class="stat-num green" id="cnt-green">0</div><div class="stat-lbl">تم التسليم</div></div></div>
+  <div class="stat-item"><div class="stat-icon blue">📋</div><div><div class="stat-num blue" id="cnt-total">0</div><div class="stat-lbl">إجمالي العملاء</div></div></div>
+</div>
+
+<div class="layout">
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-section">عرض</div>
+    <div class="sidebar-item active" onclick="setFilter('all',this)"><div class="sidebar-dot" style="background:#60a5fa"></div> الكل <span class="sidebar-count" id="sc-all">0</span></div>
+    <div class="sidebar-item" onclick="setFilter('urgent',this)"><div class="sidebar-dot" style="background:#ef4444"></div> عاجل <span class="sidebar-count" id="sc-urgent">0</span></div>
+    <div class="sidebar-item" onclick="setFilter('noreply',this)"><div class="sidebar-dot" style="background:#f97316"></div> بدون رد <span class="sidebar-count" id="sc-noreply">0</span></div>
+    <div class="sidebar-item" onclick="setFilter('done',this)"><div class="sidebar-dot" style="background:#22c55e"></div> مكتمل <span class="sidebar-count" id="sc-done">0</span></div>
+    <div class="sidebar-item" onclick="setFilter('wa',this)"><div class="sidebar-dot" style="background:#4ade80"></div> واتساب فقط</div>
+    <div class="sidebar-item" onclick="setFilter('fb',this)"><div class="sidebar-dot" style="background:#60a5fa"></div> ماسنجر فقط</div>
+    <div class="sidebar-section">الأولوية</div>
+    <div class="sidebar-item" onclick="setFilter('vip',this)"><div class="sidebar-dot" style="background:#eab308"></div> VIP ★★★</div>
+    <div class="sidebar-item" onclick="setFilter('important',this)"><div class="sidebar-dot" style="background:#eab308"></div> مهم ★★</div>
+    <div class="sidebar-item" onclick="setFilter('normal',this)"><div class="sidebar-dot" style="background:#555"></div> عادي ★</div>
+  </div>
+
+  <div class="tasks-panel">
+    <div class="tasks-header">
+      <span>مهام اليوم</span>
+      <span id="tasks-count" style="color:var(--accent);font-size:11px"></span>
+    </div>
+    <div id="tasks-list"></div>
+  </div>
+
+  <div class="content">
+    <div class="content-toolbar">
+      <div class="search-wrap">
+        <input type="text" id="search-input" placeholder="بحث عن عميل..." oninput="render()">
+        <span class="search-icon">🔍</span>
+      </div>
+      <select class="filter-select" id="sort-select" onchange="render()">
+        <option value="deadline">ترتيب: الموعد الأقرب</option>
+        <option value="prio">ترتيب: الأولوية</option>
+        <option value="name">ترتيب: الاسم</option>
+        <option value="lastReply">ترتيب: آخر رد</option>
+      </select>
+      <button class="btn btn-sm sort-btn" onclick="toggleDone()" id="done-toggle">إخفاء المكتملة</button>
+    </div>
+    <div class="table-wrap">
+      <table id="main-table">
+        <thead>
+          <tr>
+            <th style="width:150px">العميل</th>
+            <th style="width:60px">القناة</th>
+            <th style="width:160px">آخر رسالة</th>
+            <th style="width:90px" onclick="setSortCol('deadline')" id="th-deadline">⏰ الموعد <span class="sort-arrow">↕</span></th>
+            <th style="width:70px" onclick="setSortCol('prio')" id="th-prio">الأولوية <span class="sort-arrow">↕</span></th>
+            <th style="width:55px" onclick="setSortCol('lastReply')" id="th-lastReply">آخر رد <span class="sort-arrow">↕</span></th>
+            <th style="width:160px">الإجراءات</th>
+          </tr>
+        </thead>
+        <tbody id="table-body"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="notif-bar" id="notif-bar"></div>
+
+<!-- ADD/EDIT MODAL -->
+<div class="overlay" id="modal-overlay">
+  <div class="modal">
+    <div class="modal-title" id="modal-title">إضافة عميل جديد</div>
+    <div class="form-row"><label>اسم العميل *</label><input type="text" id="f-name" placeholder="مثال: شركة النور للعقارات"></div>
+    <div class="form-grid">
+      <div class="form-row"><label>رقم الواتساب</label><input type="text" id="f-phone" placeholder="201001234567" style="direction:ltr"></div>
+      <div class="form-row"><label>القناة</label>
+        <select id="f-channel"><option value="WA">واتساب</option><option value="FB">ماسنجر</option></select>
+      </div>
+    </div>
+    <div class="form-grid">
+      <div class="form-row"><label>موعد التسليم *</label><input type="datetime-local" id="f-deadline"></div>
+      <div class="form-row"><label>الأولوية</label>
+        <select id="f-prio"><option value="3">VIP ★★★</option><option value="2">مهم ★★</option><option value="1">عادي ★</option></select>
+      </div>
+    </div>
+    <div class="form-row"><label>المبلغ المتفق عليه (جنيه)</label><input type="number" id="f-amount" placeholder="0" min="0"></div>
+    <div class="form-row"><label>آخر رسالة / ملاحظة</label><textarea id="f-msg" placeholder="انسخ آخر رسالة من العميل هنا..."></textarea></div>
+    <div class="form-row"><label>رابط التصميم أو الملف</label><input type="url" id="f-link" placeholder="https://..." style="direction:ltr"></div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal()">إلغاء</button>
+      <button class="btn btn-primary" onclick="saveClient()">حفظ العميل</button>
+    </div>
+  </div>
+</div>
+
+<!-- SETTINGS MODAL -->
+<div class="overlay" id="settings-overlay">
+  <div class="settings-panel">
+    <div class="modal-title">⚙ الإعدادات</div>
+
+    <div class="settings-section">
+      <div class="settings-section-title">التنبيهات</div>
+      <div class="setting-row">
+        <div><div class="setting-label">تنبيه عدم الرد</div><div class="setting-desc">تنبيه إذا مر وقت بدون رد</div></div>
+        <label class="toggle"><input type="checkbox" id="s-noreply-alert" checked><span class="toggle-slider"></span></label>
+      </div>
+      <div class="setting-row">
+        <div><div class="setting-label">مدة عدم الرد (ساعات)</div></div>
+        <input type="number" class="number-input" id="s-noreply-hours" value="2" min="1" max="48">
+      </div>
+      <div class="setting-row">
+        <div><div class="setting-label">تنبيه المواعيد</div><div class="setting-desc">تنبيه قبل موعد التسليم</div></div>
+        <label class="toggle"><input type="checkbox" id="s-deadline-alert" checked><span class="toggle-slider"></span></label>
+      </div>
+      <div class="setting-row">
+        <div><div class="setting-label">التنبيه قبل التسليم بـ (ساعة)</div></div>
+        <input type="number" class="number-input" id="s-deadline-hours" value="2" min="1" max="48">
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <div class="settings-section-title">العرض</div>
+      <div class="setting-row">
+        <div><div class="setting-label">إخفاء العملاء المكتملين</div></div>
+        <label class="toggle"><input type="checkbox" id="s-hide-done"><span class="toggle-slider"></span></label>
+      </div>
+      <div class="setting-row">
+        <div><div class="setting-label">عرض عمود المبلغ</div></div>
+        <label class="toggle"><input type="checkbox" id="s-show-amount" checked onchange="applySettings()"><span class="toggle-slider"></span></label>
+      </div>
+      <div class="setting-row">
+        <div><div class="setting-label">عرض عمود آخر رد</div></div>
+        <label class="toggle"><input type="checkbox" id="s-show-lastReply" checked onchange="applySettings()"><span class="toggle-slider"></span></label>
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <div class="settings-section-title">بيانات التطبيق</div>
+      <div class="setting-row">
+        <div><div class="setting-label">حذف كل البيانات</div><div class="setting-desc">لا يمكن التراجع</div></div>
+        <button class="btn btn-sm" style="color:#fca5a5;border-color:#7f1d1d;background:#2d1212" onclick="clearAll()">حذف الكل</button>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn" onclick="closeSettings()">إغلاق</button>
+      <button class="btn btn-primary" onclick="applySettings();closeSettings()">حفظ الإعدادات</button>
+    </div>
+  </div>
+</div>
+
+<input type="file" id="import-input" accept=".json" style="display:none" onchange="handleImport(event)">
+
+<script>
+const STORE = 'helal_ads_v2';
+const SETTINGS_STORE = 'helal_settings_v2';
+let clients = [];
+let editId = null;
+let currentFilter = 'all';
+let hideDone = false;
+let settings = { noReplyAlert: true, noReplyHours: 2, deadlineAlert: true, deadlineHours: 2, showAmount: true, showLastReply: true };
+
+function loadSettings() {
+  try { const s = JSON.parse(localStorage.getItem(SETTINGS_STORE)); if(s) settings = {...settings,...s}; } catch(e){}
+  document.getElementById('s-noreply-alert').checked = settings.noReplyAlert;
+  document.getElementById('s-noreply-hours').value = settings.noReplyHours;
+  document.getElementById('s-deadline-alert').checked = settings.deadlineAlert;
+  document.getElementById('s-deadline-hours').value = settings.deadlineHours;
+  document.getElementById('s-hide-done').checked = settings.hideDone||false;
+  document.getElementById('s-show-amount').checked = settings.showAmount !== false;
+  document.getElementById('s-show-lastReply').checked = settings.showLastReply !== false;
+}
+
+function applySettings() {
+  settings.noReplyAlert = document.getElementById('s-noreply-alert').checked;
+  settings.noReplyHours = +document.getElementById('s-noreply-hours').value;
+  settings.deadlineAlert = document.getElementById('s-deadline-alert').checked;
+  settings.deadlineHours = +document.getElementById('s-deadline-hours').value;
+  settings.hideDone = document.getElementById('s-hide-done').checked;
+  settings.showAmount = document.getElementById('s-show-amount').checked;
+  settings.showLastReply = document.getElementById('s-show-lastReply').checked;
+  localStorage.setItem(SETTINGS_STORE, JSON.stringify(settings));
+  render();
+}
+
+function load() {
+  try { clients = JSON.parse(localStorage.getItem(STORE)||'[]'); } catch(e){ clients=[]; }
+  if(!clients.length) {
+    const now = Date.now();
+    clients = [
+      {id:1,name:'شركة النور للعقارات',phone:'201001111111',channel:'WA',deadline:new Date(now+2*3600000).toISOString(),prio:3,msg:'عايز الإعلان بكره الصبح بأي طريقة',done:false,lastReply:new Date(now-3*3600000).toISOString(),amount:500,link:''},
+      {id:2,name:'مطعم الأصيل',phone:'201002222222',channel:'FB',deadline:new Date(now+5*3600000).toISOString(),prio:3,msg:'اعمل الفيديو الترويجي للمنيو الجديد',done:false,lastReply:new Date(now-1*3600000).toISOString(),amount:800,link:''},
+      {id:3,name:'د. سارة — عيادة أسنان',phone:'201003333333',channel:'WA',deadline:new Date(now+26*3600000).toISOString(),prio:2,msg:'شوف التصميم وقولي رأيك النهارده',done:false,lastReply:new Date(now-2.5*3600000).toISOString(),amount:350,link:''},
+      {id:4,name:'متجر فاشون لاين',phone:'201004444444',channel:'FB',deadline:new Date(now+50*3600000).toISOString(),prio:2,msg:'محتاج 5 بوستات للأسبوع الجاي',done:false,lastReply:new Date(now-0.5*3600000).toISOString(),amount:1200,link:''},
+      {id:5,name:'تك سوليوشنز',phone:'201005555555',channel:'WA',deadline:new Date(now-2*3600000).toISOString(),prio:1,msg:'تمام يسطا شغل جامد جداً تسلم',done:true,lastReply:new Date(now-0.2*3600000).toISOString(),amount:600,link:''}
+    ];
+    save();
+  }
+}
+
+function save() { localStorage.setItem(STORE, JSON.stringify(clients)); }
+
+function getRowClass(c) {
+  if(c.done) return 'r-green';
+  const now = Date.now();
+  const dl = new Date(c.deadline).getTime();
+  const hrs = (now - new Date(c.lastReply).getTime()) / 3600000;
+  if(dl > now && dl - now < 24*3600000) return 'r-red';
+  if(settings.noReplyAlert && hrs >= settings.noReplyHours) return 'r-orange';
+  return '';
+}
+
+function formatCountdown(c) {
+  if(c.done) return '<span class="countdown cd-green">✓ تم التسليم</span>';
+  const diff = new Date(c.deadline).getTime() - Date.now();
+  if(diff < 0) return '<span class="countdown cd-orange">انتهى الموعد</span>';
+  const h = Math.floor(diff/3600000), m = Math.floor((diff%3600000)/60000), s = Math.floor((diff%60000)/1000);
+  if(h < 1) return '<span class="countdown cd-red">'+(m)+'د '+s+'ث</span>';
+  if(h < 24) return '<span class="countdown cd-red">'+h+'س '+m+'د '+s+'ث</span>';
+  return '<span class="countdown cd-orange">'+Math.floor(diff/86400000)+' يوم</span>';
+}
+
+function formatLastReply(c) {
+  const hrs = (Date.now() - new Date(c.lastReply).getTime()) / 3600000;
+  if(hrs < 1) return '<span style="color:var(--green);font-size:11px">'+Math.floor(hrs*60)+'د</span>';
+  if(hrs < settings.noReplyHours) return '<span style="color:var(--text2);font-size:11px">'+Math.floor(hrs)+'س</span>';
+  return '<span style="color:var(--orange);font-size:11px">'+Math.floor(hrs)+'س ⚠</span>';
+}
+
+function prio(p) {
+  return '<div class="prio-wrap">'+[1,2,3].map(i=>'<div class="prio-star '+(i<=p?'on':'off')+'"></div>').join('')+'</div>';
+}
+
+function getFiltered() {
+  let list = [...clients];
+  const q = document.getElementById('search-input').value.trim().toLowerCase();
+  if(q) list = list.filter(c => c.name.toLowerCase().includes(q) || (c.msg||'').toLowerCase().includes(q) || (c.phone||'').includes(q));
+  const now = Date.now();
+  if(currentFilter === 'urgent') list = list.filter(c => !c.done && new Date(c.deadline)-now < 24*3600000 && new Date(c.deadline)-now > 0);
+  else if(currentFilter === 'noreply') list = list.filter(c => !c.done && (now-new Date(c.lastReply))/3600000 >= settings.noReplyHours);
+  else if(currentFilter === 'done') list = list.filter(c => c.done);
+  else if(currentFilter === 'wa') list = list.filter(c => c.channel==='WA');
+  else if(currentFilter === 'fb') list = list.filter(c => c.channel==='FB');
+  else if(currentFilter === 'vip') list = list.filter(c => c.prio===3);
+  else if(currentFilter === 'important') list = list.filter(c => c.prio===2);
+  else if(currentFilter === 'normal') list = list.filter(c => c.prio===1);
+  if(settings.hideDone || hideDone) list = list.filter(c => !c.done);
+  const sort = document.getElementById('sort-select').value;
+  list.sort((a,b) => {
+    if(a.done && !b.done) return 1;
+    if(!a.done && b.done) return -1;
+    if(sort==='deadline') return new Date(a.deadline)-new Date(b.deadline);
+    if(sort==='prio') return b.prio-a.prio;
+    if(sort==='name') return a.name.localeCompare(b.name,'ar');
+    if(sort==='lastReply') return new Date(b.lastReply)-new Date(a.lastReply);
+    return 0;
+  });
+  return list;
+}
+
+function render() {
+  const list = getFiltered();
+  const showAmount = settings.showAmount !== false;
+  const showLastReply = settings.showLastReply !== false;
+
+  let html = '';
+  if(!list.length) {
+    html = '<tr><td colspan="8"><div class="empty-state"><div class="empty-icon">📋</div><p>لا يوجد عملاء في هذا الفلتر</p><button class="btn btn-primary" onclick="openAdd()">+ إضافة عميل جديد</button></div></td></tr>';
+  } else {
+    list.forEach(c => {
+      const rc = getRowClass(c);
+      const waUrl = 'https://wa.me/'+(c.phone||'');
+      const preview = (c.msg||'').slice(0,40)+((c.msg||'').length>40?'...':'');
+      html += '<tr class="'+rc+'">';
+      html += '<td><div class="client-name">'+c.name+'</div>';
+      if(c.amount) html += '<div style="font-size:10px;color:var(--green)">'+(c.amount).toLocaleString()+' ج</div>';
+      html += '</td>';
+      html += '<td><span class="ch-badge '+(c.channel==='WA'?'ch-wa':'ch-fb')+'">'+c.channel+'</span></td>';
+      html += '<td><div class="msg-preview" title="'+c.msg+'">'+(preview||'—')+'</div>'+(c.link?'<a href="'+c.link+'" style="font-size:10px;color:var(--accent)">🔗 رابط</a>':'')+'</td>';
+      html += '<td>'+formatCountdown(c)+'</td>';
+      html += '<td>'+prio(c.prio)+'</td>';
+      if(showLastReply) html += '<td>'+formatLastReply(c)+'</td>';
+      html += '<td><div class="actions-cell">';
+      if(c.channel==='WA' && c.phone) html += '<button class="action-btn btn-wa" onclick="openLink(\''+waUrl+'\')">واتساب</button>';
+      if(!c.done) html += '<button class="action-btn btn-done" onclick="markDone('+c.id+')">✓ تم</button>';
+      else html += '<button class="action-btn btn-undone" onclick="markUndone('+c.id+')">↩ إلغاء</button>';
+      html += '<button class="action-btn btn-edit" onclick="openEdit('+c.id+')">✏ تعديل</button>';
+      html += '<button class="action-btn btn-del" onclick="deleteClient('+c.id+')">✕</button>';
+      html += '</div></td></tr>';
+    });
+  }
+  document.getElementById('table-body').innerHTML = html;
+
+  const thLR = document.getElementById('th-lastReply');
+  if(thLR) thLR.style.display = showLastReply ? '' : 'none';
+
+  const now = Date.now();
+  const red = clients.filter(c=>!c.done&&new Date(c.deadline)-now<86400000&&new Date(c.deadline)-now>0).length;
+  const orange = clients.filter(c=>!c.done&&(now-new Date(c.lastReply))/3600000>=settings.noReplyHours).length;
+  const green = clients.filter(c=>c.done).length;
+  document.getElementById('cnt-red').textContent = red;
+  document.getElementById('cnt-orange').textContent = orange;
+  document.getElementById('cnt-green').textContent = green;
+  document.getElementById('cnt-total').textContent = clients.length;
+  document.getElementById('sc-all').textContent = clients.length;
+  document.getElementById('sc-urgent').textContent = red;
+  document.getElementById('sc-noreply').textContent = orange;
+  document.getElementById('sc-done').textContent = green;
+
+  const pending = clients.filter(c=>!c.done).sort((a,b)=>new Date(a.deadline)-new Date(b.deadline));
+  let thtml = '';
+  pending.slice(0,5).forEach(c=>{
+    const diff = new Date(c.deadline)-now;
+    const h = Math.floor(diff/3600000);
+    let tcls = 't-orange', tlbl = h+'س';
+    if(diff<0){tcls='t-orange';tlbl='انتهى';}
+    else if(h<6){tcls='t-red';tlbl=h+'س '+Math.floor((diff%3600000)/60000)+'د';}
+    else if(h>=24){tcls='';const d=Math.floor(diff/86400000);tlbl=d+' يوم';}
+    thtml += '<div class="task-card '+tcls+'" onclick="openEdit('+c.id+')">';
+    thtml += '<div class="task-client">'+c.name+'</div>';
+    thtml += '<div class="task-msg">'+(c.msg||'').slice(0,30)+'</div>';
+    thtml += '<div class="task-time">⏰ '+tlbl+'</div></div>';
+  });
+  document.getElementById('tasks-list').innerHTML = thtml || '<div style="font-size:12px;color:var(--text3);text-align:center;padding:16px">لا توجد مهام معلقة</div>';
+  document.getElementById('tasks-count').textContent = pending.length ? pending.length+' مهمة' : '';
+
+  const notifs = [];
+  if(red > 0) notifs.push('<div class="notif-item"><span style="color:var(--red)">⚠ '+red+' مهمة عاجلة اليوم</span></div>');
+  if(orange > 0) notifs.push('<div class="notif-item"><span style="color:var(--orange)">⏱ '+orange+' عميل بدون رد +'+settings.noReplyHours+'ساعة</span></div>');
+  if(!notifs.length) notifs.push('<div class="notif-item"><span>✓ كل المهام تمام — لا يوجد تنبيهات</span></div>');
+  document.getElementById('notif-bar').innerHTML = notifs.join('');
+}
+
+function setFilter(f, el) {
+  currentFilter = f;
+  document.querySelectorAll('.sidebar-item').forEach(x=>x.classList.remove('active'));
+  el.classList.add('active');
+  render();
+}
+
+function setSortCol(col) {
+  document.getElementById('sort-select').value = col;
+  render();
+}
+
+function toggleDone() {
+  hideDone = !hideDone;
+  document.getElementById('done-toggle').textContent = hideDone ? 'إظهار المكتملة' : 'إخفاء المكتملة';
+  render();
+}
+
+function openAdd() {
+  editId = null;
+  document.getElementById('modal-title').textContent = 'إضافة عميل جديد';
+  document.getElementById('f-name').value='';
+  document.getElementById('f-phone').value='';
+  document.getElementById('f-channel').value='WA';
+  const d = new Date(); d.setHours(d.getHours()+24);
+  document.getElementById('f-deadline').value = d.toISOString().slice(0,16);
+  document.getElementById('f-prio').value='2';
+  document.getElementById('f-msg').value='';
+  document.getElementById('f-amount').value='';
+  document.getElementById('f-link').value='';
+  document.getElementById('modal-overlay').classList.add('open');
+  setTimeout(()=>document.getElementById('f-name').focus(),100);
+}
+
+function openEdit(id) {
+  editId = id;
+  const c = clients.find(x=>x.id===id);
+  if(!c) return;
+  document.getElementById('modal-title').textContent = 'تعديل: '+c.name;
+  document.getElementById('f-name').value = c.name;
+  document.getElementById('f-phone').value = c.phone||'';
+  document.getElementById('f-channel').value = c.channel;
+  document.getElementById('f-deadline').value = new Date(c.deadline).toISOString().slice(0,16);
+  document.getElementById('f-prio').value = c.prio;
+  document.getElementById('f-msg').value = c.msg||'';
+  document.getElementById('f-amount').value = c.amount||'';
+  document.getElementById('f-link').value = c.link||'';
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function closeModal() { document.getElementById('modal-overlay').classList.remove('open'); }
+
+function saveClient() {
+  const name = document.getElementById('f-name').value.trim();
+  if(!name) { alert('اكتب اسم العميل'); return; }
+  const deadline = document.getElementById('f-deadline').value;
+  if(!deadline) { alert('حدد موعد التسليم'); return; }
+  const data = {
+    name, phone: document.getElementById('f-phone').value.trim().replace(/\D/g,''),
+    channel: document.getElementById('f-channel').value,
+    deadline: new Date(deadline).toISOString(),
+    prio: +document.getElementById('f-prio').value,
+    msg: document.getElementById('f-msg').value.trim(),
+    amount: +document.getElementById('f-amount').value||0,
+    link: document.getElementById('f-link').value.trim()
+  };
+  if(editId) {
+    const idx = clients.findIndex(x=>x.id===editId);
+    clients[idx] = {...clients[idx],...data};
+  } else {
+    clients.push({id:Date.now(),...data,done:false,lastReply:new Date().toISOString()});
+  }
+  save(); closeModal(); render();
+}
+
+function markDone(id) {
+  const c = clients.find(x=>x.id===id);
+  if(c){ c.done=true; save(); render(); }
+}
+function markUndone(id) {
+  const c = clients.find(x=>x.id===id);
+  if(c){ c.done=false; c.lastReply=new Date().toISOString(); save(); render(); }
+}
+function deleteClient(id) {
+  if(confirm('هل تريد حذف هذا العميل نهائياً؟')) { clients=clients.filter(x=>x.id!==id); save(); render(); }
+}
+
+function openSettings() { document.getElementById('settings-overlay').classList.add('open'); }
+function closeSettings() { document.getElementById('settings-overlay').classList.remove('open'); }
+
+function clearAll() {
+  if(confirm('هل أنت متأكد؟ سيتم حذف كل البيانات ولا يمكن التراجع.')) {
+    clients=[]; save(); render();
+  }
+}
+
+function exportData() {
+  const blob = new Blob([JSON.stringify({clients,settings},null,2)],{type:'application/json'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = 'helal_ads_backup_'+new Date().toLocaleDateString('ar-EG').replace(/\//g,'-')+'.json';
+  a.click();
+}
+function importData() { document.getElementById('import-input').click(); }
+function handleImport(e) {
+  const file = e.target.files[0]; if(!file) return;
+  const r = new FileReader();
+  r.onload = ev => {
+    try {
+      const d = JSON.parse(ev.target.result);
+      if(d.clients && Array.isArray(d.clients)) {
+        if(confirm('سيتم استبدال البيانات الحالية. هل تريد المتابعة؟')) {
+          clients = d.clients;
+          if(d.settings) { settings={...settings,...d.settings}; localStorage.setItem(SETTINGS_STORE,JSON.stringify(settings)); }
+          save(); loadSettings(); render(); alert('تم الاستيراد بنجاح!');
+        }
+      } else alert('الملف غير صحيح');
+    } catch(err){ alert('خطأ في قراءة الملف'); }
+  };
+  r.readAsText(file);
+  e.target.value='';
+}
+
+document.getElementById('modal-overlay').addEventListener('click', e => { if(e.target===e.currentTarget) closeModal(); });
+document.getElementById('settings-overlay').addEventListener('click', e => { if(e.target===e.currentTarget) closeSettings(); });
+document.addEventListener('keydown', e => { if(e.key==='Escape'){closeModal();closeSettings();} });
+
+load(); loadSettings(); render();
+setInterval(render, 1000);
+</script>
+</body>
+</html>
